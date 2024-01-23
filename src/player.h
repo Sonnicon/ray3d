@@ -1,10 +1,10 @@
 #ifndef H_PLAYER
 #define H_PLAYER
 
-#include "world.h"
 #include "SDL2/SDL.h"
+#include "world.h"
 
-#define PLAYER_SPEED 16
+#define PLAYER_SPEED 32
 
 void init_player();
 

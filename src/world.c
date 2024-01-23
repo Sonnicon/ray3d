@@ -1,5 +1,5 @@
-#include "world.h"
 #include "math.h"
+#include "world.h"
 
 void world_cast_distance(struct World_Position *result, struct World_Position *source, double distance) {
 	struct World_Block *iter_block = source->block;

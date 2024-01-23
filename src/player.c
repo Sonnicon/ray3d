@@ -1,6 +1,6 @@
 #include "player.h"
-#include "renderer.h"
 #include "input.h"
+#include "renderer.h"
 #include "world.h"
 
 struct World_Position *player_pos;

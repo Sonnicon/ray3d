@@ -23,8 +23,20 @@ void renderer_update(unsigned int tick) {
 
 void renderer_render(SDL_Surface *surface, struct World_Position *source, double angle_vertical) {
 	SDL_FillRect(surface, 0, 0);
+
+
+	SDL_Rect draw_area;
+	draw_area.w = RENDERER_RESOLUTION_X;
+
+	SDL_Rect tex_area;
+	tex_area.w = 1;
+	tex_area.y = 0;
+	tex_area.h = 32;
+
 	// x-beams
 	for (unsigned short column = 0; column <= SDL_WIDTH; column += RENDERER_RESOLUTION_X) {
+		draw_area.x = column;
+
 		struct World_Block *iter_block = source->block;
 
 		// Positions we are casting from currently
@@ -45,7 +57,7 @@ void renderer_render(SDL_Surface *surface, struct World_Position *source, double
 		unsigned char is_right_close;
 		unsigned char faces[2];
 
-		while (distance < 512.) {
+		while (distance < RENDERER_MAXDIST) {
 			// Left and right edges that we might touch
 			faces[0] = floor(iter_angle / M_PI_2);
 			faces[1] = (faces[0] + 1) % 4;
@@ -88,59 +100,57 @@ void renderer_render(SDL_Surface *surface, struct World_Position *source, double
 			iter_angle = NORMALIZE_ANGLE(iter_angle + M_PI_2 * (2 - ff + next_face));
 		}
 
-		if (distance > 500.) continue;
-		double straight_distance = distance * fabs(cos(column_angle - source->angle));
-		double draw_height = 16 * (double) SDL_HEIGHT;// - straight_distance;// * sin(column_angle);
+		float constant = SDL_HEIGHT * 8.0 / (distance * fabs(cos(column_angle - source->angle)));
+		float variable = SDL_HEIGHT * (tan(angle_vertical) + 0.5);
 
-		double v_offset = tan(angle_vertical) * straight_distance * (double) SDL_HEIGHT;
+		int draw_top = (int) floorf(variable - constant);
+		int draw_bottom = (int) ceilf(variable + constant);
 
+		// Walls
+		if (distance <= RENDERER_MAXDIST) {
+			tex_area.x = (int) iter_pos[faces[is_right_close] % 2 == 0];
 
-		double theta1 = atan((draw_height * 0.5 + v_offset) / straight_distance);
-		double theta2 = atan((draw_height * -0.5 + v_offset) / straight_distance);
+			draw_area.y = draw_top;
+			draw_area.h = draw_bottom - draw_top;
 
-		double draw_bottom = ((double) SDL_HEIGHT / 2) + tan(theta1);
-		double draw_top = ((double) SDL_HEIGHT / 2) + tan(theta2);
+			smooth_blit(wall_texture, &tex_area, surface, &draw_area);
+		}
+		// Ceiling
+		draw_area.y = 0;
+		draw_area.h = draw_top;
+		SDL_FillRect(surface, &draw_area, 0x044AA);
+		// Floor
+		draw_area.y = draw_bottom >= 1 ? draw_bottom - 1 : 0;
+		draw_area.h = SDL_HEIGHT;
+		SDL_FillRect(surface, &draw_area, 0x444444);
 
-		SDL_Rect tex_area;
-		tex_area.w = 1;
-		tex_area.y = 0;
-		tex_area.h = 32;
-		tex_area.x = iter_pos[faces[is_right_close] % 2 == 0];
-		
-		SDL_Rect draw_area;
-		draw_area.x = column;
-		draw_area.w = RENDERER_RESOLUTION_X;
-		draw_area.y = draw_top;
-		draw_area.h = draw_bottom - draw_top;
-
-		smooth_blit(wall_texture, &tex_area, surface, &draw_area);
 	}
 
 	SDL_UpdateWindowSurface(graphics_window());
 }
 
 void smooth_blit(SDL_Surface *src, SDL_Rect *src_rect, SDL_Surface *dst, SDL_Rect *dst_rect) {
-	float pixel_height = dst_rect->h / (float) src_rect->h;
-	
-	float draw_top = dst_rect->y;
-	float draw_bottom = dst_rect->y + dst_rect->h;
+	float pixel_height = (float) dst_rect->h / (float) src_rect->h;
+
+	int draw_top = dst_rect->y;
+	int draw_bottom = dst_rect->y + dst_rect->h;
 
 	unsigned short skip_top = 0, skip_bottom = 0;
 
 	// Trimming top
 	if (draw_top < 0.) {
-		float trim_top = -draw_top;
-		float diff = trim_top / pixel_height;
-		skip_top = ceilf(diff);
-		draw_top = (skip_top - diff) * pixel_height;
+		int trim_top = -draw_top;
+		float diff = (float) trim_top / pixel_height;
+		skip_top = (unsigned short) ceilf(diff);
+		draw_top = (int) roundf(((float) skip_top - diff) * pixel_height);
 	}
 
 	// Trimming Bottom
 	if (draw_bottom > SDL_HEIGHT) {
-		float trim_bottom = dst_rect->y + dst_rect->h - SDL_HEIGHT;
-		float diff = trim_bottom / pixel_height;
-		skip_bottom = ceilf(diff);
-		draw_bottom = SDL_HEIGHT - (skip_bottom - diff) * pixel_height;
+		unsigned short trim_bottom = dst_rect->y + dst_rect->h - SDL_HEIGHT;
+		float diff = (float) trim_bottom / pixel_height;
+		skip_bottom = (unsigned short) ceilf(diff);
+		draw_bottom = SDL_HEIGHT - roundf(((float) skip_bottom - diff) * pixel_height);
 	}
 
 	// Main segment
@@ -153,26 +163,26 @@ void smooth_blit(SDL_Surface *src, SDL_Rect *src_rect, SDL_Surface *dst, SDL_Rec
 	SDL_Rect draw_rect;
 	draw_rect.x = dst_rect->x;
 	draw_rect.w = dst_rect->w;
-	draw_rect.y = floorf(draw_top);
-	draw_rect.h = ceilf(draw_bottom - draw_top);
+	draw_rect.y = draw_top;
+	draw_rect.h = draw_bottom - draw_top;
 
 	SDL_LowerBlitScaled(src, &take_rect, dst, &draw_rect);
 
 	// Top square
 	if (skip_top) {
 		draw_rect.y = 0;
-		draw_rect.h = ceilf(draw_top);
+		draw_rect.h = draw_top;
 
 		take_rect.y = src_rect->y + skip_top - 1;
 		take_rect.h = 1;
 
 		SDL_BlitScaled(src, &take_rect, dst, &draw_rect);
 	}
-	
+
 	// Bottom square
 	if (skip_bottom) {
-		draw_rect.y = floorf(draw_bottom);
-		draw_rect.h = SDL_HEIGHT - ceilf(draw_bottom);
+		draw_rect.y = draw_bottom;
+		draw_rect.h = SDL_HEIGHT - draw_bottom;
 
 		take_rect.y = src_rect->y + src_rect->h - skip_bottom;
 		take_rect.h = 1;

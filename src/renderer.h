@@ -8,6 +8,7 @@
 #define RENDERER_RESOLUTION_X 1
 #define RENDERER_FOV_X M_PI_2
 #define RENDERER_FPS 60
+#define RENDERER_MAXDIST 500
 
 void renderer_update(unsigned int tick);
 

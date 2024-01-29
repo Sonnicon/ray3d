@@ -12,22 +12,17 @@ int main() {
 	init_player();
 
 	// Temporary world setup
-	struct World_Block *block = calloc(1, sizeof(struct World_Block));
-	struct World_Block *block2 = calloc(1, sizeof(struct World_Block));
-	struct World_Block *block3 = calloc(1, sizeof(struct World_Block));
-	struct World_Block *block4 = calloc(1, sizeof(struct World_Block));
-	block->widths[0] = 32;
-	block->widths[1] = 32;
-	block2->widths[0] = 32;
-	block2->widths[1] = 32;
-	block3->widths[0] = 32;
-	block3->widths[1] = 32;
-	block4->widths[0] = 32;
-	block4->widths[1] = 32;
+	struct World_Block *block1 = block_create(32, 32, 0, 0, 0, 0, -1, -1, -1, -1);
+	struct World_Block *block2 = block_copy(block1);
+	struct World_Block *block3 = block_copy(block1);
+	struct World_Block *block4 = block_copy(block1);
+	block1->face_textures[0] = WALL_GREY;
+	block1->nearby_blocks[0] = block1;
+	block1->nearby_blocks_faces[0] = 2;
 
-	block->nearby_blocks[0] = block2;
-	block->nearby_blocks_faces[0] = 2;
-	block2->nearby_blocks[2] = block;
+	block1->nearby_blocks[0] = block2;
+	block1->nearby_blocks_faces[0] = 2;
+	block2->nearby_blocks[2] = block1;
 	block2->nearby_blocks_faces[2] = 0;
 
 	block2->nearby_blocks[0] = block4;
@@ -40,15 +35,15 @@ int main() {
 	block3->nearby_blocks[3] = block2;
 	block3->nearby_blocks_faces[3] = 1;
 
-	block->nearby_blocks[3] = block3;
-	block->nearby_blocks_faces[3] = 1;
-	block3->nearby_blocks[1] = block;
+	block1->nearby_blocks[3] = block3;
+	block1->nearby_blocks_faces[3] = 1;
+	block3->nearby_blocks[1] = block1;
 	block3->nearby_blocks_faces[1] = 3;
 
 	block4->nearby_blocks[0] = block4;
 	block4->nearby_blocks_faces[0] = 2;
 
-	player_position(block, 16., 16., 0., 0.);
+	player_position(block1, 16., 16., 0., 0.);
 
 	unsigned int tick_last = SDL_GetTicks64();
 

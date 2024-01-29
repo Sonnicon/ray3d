@@ -6,6 +6,13 @@
 #define SDL_WIDTH 640
 #define SDL_HEIGHT 480
 
+#define NUM_WALL_TEXTURES 2
+
+enum Wall_Texture {
+	WALL_BRICK = 0,
+	WALL_GREY
+};
+
 char init_graphics();
 
 void dispose_graphics();

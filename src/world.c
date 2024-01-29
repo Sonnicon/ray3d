@@ -1,5 +1,40 @@
-#include "math.h"
 #include "world.h"
+#include <stdlib.h>
+#include <string.h>
+
+#include "math.h"
+
+struct World_Block *block_copy(struct World_Block *from) {
+	struct World_Block *new = malloc(sizeof(struct World_Block));
+	memcpy(new, from, sizeof(*from));
+	return new;
+}
+
+#define bp(x) struct World_Block *nearby_block##x
+
+struct World_Block *
+block_create(unsigned char w, unsigned char h, bp(0), bp(1), bp(2), bp(3), char face0, char face1, char face2,
+			 char face3) {
+	struct World_Block *new = malloc(sizeof(struct World_Block));
+
+	new->widths[0] = w;
+	new->widths[1] = h;
+
+	new->nearby_blocks[0] = nearby_block0;
+	new->nearby_blocks[1] = nearby_block1;
+	new->nearby_blocks[2] = nearby_block2;
+	new->nearby_blocks[3] = nearby_block3;
+
+	new->face_textures[0] = face0;
+	new->face_textures[1] = face1;
+	new->face_textures[2] = face2;
+	new->face_textures[3] = face3;
+
+	return new;
+}
+
+#undef bp
+
 
 void world_cast_distance(struct World_Position *result, struct World_Position *source, double distance) {
 	struct World_Block *iter_block = source->block;

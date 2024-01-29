@@ -10,7 +10,7 @@
 unsigned int tick_last_frame = 1;
 unsigned int frame_count = 0;
 
-extern SDL_Surface *wall_texture;
+extern SDL_Surface *wall_textures[NUM_WALL_TEXTURES];
 
 void renderer_update(unsigned int tick) {
 	if (tick - tick_last_frame < 1000 / RENDERER_FPS) {
@@ -57,6 +57,8 @@ void renderer_render(SDL_Surface *surface, struct World_Position *source, double
 		unsigned char is_right_close;
 		unsigned char faces[2];
 
+		char face_texture = -1;
+
 		while (distance < RENDERER_MAXDIST) {
 			// Left and right edges that we might touch
 			faces[0] = floor(iter_angle / M_PI_2);
@@ -79,11 +81,13 @@ void renderer_render(SDL_Surface *surface, struct World_Position *source, double
 			iter_pos[faces[is_right_close ^ 1] % 2] += dist_edge[is_right_close] / tan(small_angles[!is_right_close]) *
 													   ((faces[is_right_close ^ 1] >= 2) * 2 - 1);
 
-			struct World_Block *next_block = iter_block->nearby_blocks[faces[is_right_close]];
-			unsigned char next_face = iter_block->nearby_blocks_faces[faces[is_right_close]];
+			unsigned int faceid = faces[is_right_close];
+			struct World_Block *next_block = iter_block->nearby_blocks[faceid];
+			unsigned char next_face = iter_block->nearby_blocks_faces[faceid];
+			face_texture = iter_block->face_textures[faceid];
 
 			// No next block
-			if (!next_block) break;
+			if (!next_block || face_texture >= 0) break;
 			iter_block = next_block;
 
 			// Coordinate transformations	
@@ -108,12 +112,15 @@ void renderer_render(SDL_Surface *surface, struct World_Position *source, double
 
 		// Walls
 		if (distance <= RENDERER_MAXDIST) {
+			if (face_texture < 0) {
+				face_texture = WALL_BRICK;
+			}
+
 			tex_area.x = (int) iter_pos[faces[is_right_close] % 2 == 0];
 
 			draw_area.y = draw_top;
 			draw_area.h = draw_bottom - draw_top;
-
-			smooth_blit(wall_texture, &tex_area, surface, &draw_area);
+			smooth_blit(wall_textures[face_texture], &tex_area, surface, &draw_area);
 		}
 		// Ceiling
 		draw_area.y = 0;
@@ -166,7 +173,7 @@ void smooth_blit(SDL_Surface *src, SDL_Rect *src_rect, SDL_Surface *dst, SDL_Rec
 	draw_rect.y = draw_top;
 	draw_rect.h = draw_bottom - draw_top;
 
-	SDL_LowerBlitScaled(src, &take_rect, dst, &draw_rect);
+	SDL_BlitScaled(src, &take_rect, dst, &draw_rect);
 
 	// Top square
 	if (skip_top) {

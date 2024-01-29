@@ -11,7 +11,7 @@
 struct World_Block {
 	struct World_Block *nearby_blocks[4];
 	unsigned char nearby_blocks_faces[4];
-	// Directions 0/180, 90/270
+	unsigned char face_textures[4];
 	unsigned char widths[2];
 };
 
@@ -21,6 +21,17 @@ struct World_Position {
 	double angle;
 	struct World_Block *block;
 };
+
+struct World_Block *block_copy(struct World_Block *from);
+
+#define uc unsigned char
+#define bp(x) struct World_Block *nearby_block##x
+
+struct World_Block *
+block_create(uc w, uc h, bp(0), bp(1), bp(2), bp(3), char face0, char face1, char face2, char face3);
+
+#undef uc
+#undef bp
 
 void world_cast_distance(struct World_Position *result, struct World_Position *source, double distance);
 

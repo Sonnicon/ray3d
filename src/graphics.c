@@ -11,8 +11,6 @@ char init_graphics() {
 	wall_textures[WALL_BRICK] = IMG_Load("assets/wall.png");
 	wall_textures[WALL_GREY] = IMG_Load("assets/wall2.png");
 
-	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_DEBUG);
-
 	SDL_Init(SDL_INIT_VIDEO);
 	sdl_window = SDL_CreateWindow("ray3d", 0, 0, SDL_WIDTH, SDL_HEIGHT, SDL_WINDOW_SHOWN);
 	SDL_SetWindowResizable(sdl_window, SDL_FALSE);

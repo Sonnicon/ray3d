@@ -102,3 +102,33 @@ void world_cast_distance(struct World_Position *result, struct World_Position *s
 	result->angle = iter_angle - source->angle;
 	result->block = iter_block;
 }
+
+char world_get_face(struct World_Position *source) {
+	struct World_Block *iter_block = source->block;
+
+	// Positions we are casting from currently
+	// We do this so we can easily alternate between x and y based on direction
+	double iter_pos[2] = {source->x, source->y};
+
+	// Angle we are casting at currently	
+	double iter_angle = NORMALIZE_ANGLE(source->angle);
+
+	// Left and right edges that we might touch
+	unsigned char faces[2] = {floor(iter_angle / M_PI_2), 0};
+	faces[1] = (faces[0] + 1) % 4;
+
+	// Distances to the edges
+	double dist_edge[2] = {DISTANCE_TO_WALL(faces[0], iter_pos, iter_block),
+						   DISTANCE_TO_WALL(faces[1], iter_pos, iter_block)};
+
+	// Decide which edge we hit first
+	double small_angles[2] = {fmod(iter_angle, M_PI_2), 0.};
+	small_angles[1] = M_PI_2 - small_angles[0];
+	unsigned char is_right_close = (dist_edge[0] / cos(small_angles[0])) > (dist_edge[1] / cos(small_angles[1]));
+	unsigned char faceid = faces[is_right_close];
+
+	// Move as far as we can along the other edge
+	iter_pos[faces[is_right_close ^ 1] % 2] += dist_edge[is_right_close] / tan(small_angles[!is_right_close]) *
+											   ((faces[is_right_close ^ 1] >= 2) * 2 - 1);
+	return faceid;
+}

@@ -22,6 +22,11 @@ struct World_Position {
 	struct World_Block *block;
 };
 
+struct World_Face {
+	struct World_Block *block;
+	unsigned char face;
+};
+
 struct World_Block *block_copy(struct World_Block *from);
 
 #define uc unsigned char
@@ -34,5 +39,7 @@ block_create(uc w, uc h, bp(0), bp(1), bp(2), bp(3), char face0, char face1, cha
 #undef bp
 
 void world_cast_distance(struct World_Position *result, struct World_Position *source, double distance);
+
+char world_get_face(struct World_Position *source);
 
 #endif

@@ -14,4 +14,6 @@ void player_render_view(SDL_Surface *surface);
 
 void player_update(float delta);
 
+void player_attack(unsigned char button);
+
 #endif

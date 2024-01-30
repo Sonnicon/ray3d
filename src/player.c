@@ -5,6 +5,7 @@
 
 struct World_Position *player_pos;
 double player_angle_vertical;
+struct World_Face linking_face;
 
 void init_player() {
 	player_pos = malloc(sizeof(struct World_Position));
@@ -101,4 +102,30 @@ void player_update(float delta) {
 	player_pos->y = move_result.y;
 	player_pos->angle += move_result.angle;
 	player_pos->block = move_result.block;
+}
+
+void player_attack(unsigned char button) {
+	switch (button) {
+		case (1):
+			if (linking_face.block) {
+				int faceid = (int) world_get_face(player_pos);
+				player_pos->block->nearby_blocks[faceid] = linking_face.block;
+				player_pos->block->nearby_blocks_faces[faceid] = linking_face.face;
+				linking_face.block = 0;
+			} else {
+				linking_face.face = world_get_face(player_pos);
+				linking_face.block = player_pos->block;
+			}
+			break;
+
+		case (3): {
+			int faceid = (int) world_get_face(player_pos);
+			struct World_Block *new_block = block_create(32, 32, 0, 0, 0, 0, -1, -1, -1, -1);
+			player_pos->block->nearby_blocks[faceid] = new_block;
+			player_pos->block->nearby_blocks_faces[faceid] = 0;
+			new_block->nearby_blocks[0] = player_pos->block;
+			new_block->nearby_blocks_faces[0] = faceid;
+			break;	
+		}		
+	}
 }

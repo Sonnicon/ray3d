@@ -1,5 +1,6 @@
 #include "input.h"
 #include "SDL2/SDL.h"
+#include "player.h"
 
 unsigned char movement_keys = 0;
 float movement_mousedelta_x = 0.f;
@@ -21,6 +22,11 @@ char input_poll() {
 			case (SDL_MOUSEMOTION):
 				movement_mousedelta_x += (float) event.motion.xrel / 256.f;
 				movement_mousedelta_y += (float) event.motion.yrel / 256.f;
+				break;
+
+			case (SDL_MOUSEBUTTONDOWN):
+				player_attack(event.button.button);
+
 				break;
 
 			case (SDL_KEYDOWN):
